@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KeyImazing - Trang chính</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+        }
+        .app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.1);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+        .app-logo {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 1px 1px 5px rgba(0,0,0,0.2);
+        }
+        .main-container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 80px; /* Space for header */
+        }
+        .glass {
+            background: rgba(255,255,255,0.15);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.18);
+            padding: 3rem;
+            width: 100%;
+            max-width: 550px;
+        }
+        .form-title {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .admin-panel {
+            width: 100%;
+            max-width: 1140px;
+            background: rgba(30, 30, 40, 0.5);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.18);
+        }
+        .table {
+            color: white;
+            border-color: rgba(255,255,255,0.2);
+        }
+        .table thead th {
+            background: rgba(0,0,0,0.2);
+            color: #fff;
+        }
+        .modal-content {
+            background: #212529;
+            color: white;
+            border-radius: 15px;
+        }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <div class="app-logo">iMazing Key</div>
+        <div id="header-buttons">
+            <button id="adminLoginBtn" class="btn btn-outline-light">Admin</button>
+            <button id="logoutBtn" class="btn btn-danger d-none">Đăng xuất</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Customer View -->
+        <div id="customer-view" class="glass">
+            <h2 class="form-title">Kích hoạt sản phẩm</h2>
+            <form id="keyForm">
+                <div class="mb-3">
+                    <label for="customerName" class="form-label">Tên khách hàng</label>
+                    <input type="text" class="form-control" id="customerName" required placeholder="Nhập tên của bạn">
+                </div>
+                <div class="mb-3">
+                    <label for="productKey" class="form-label">Nhập Key</label>
+                    <input type="text" class="form-control" id="productKey" required placeholder="Nhập key sản phẩm...">
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mt-3 py-2">Xác nhận</button>
+                <div id="message" class="mt-3 text-center"></div>
+            </form>
+        </div>
+
+        <!-- Admin Panel -->
+        <div id="adminPanel" class="admin-panel d-none">
+            <h2 class="mb-4">Bảng quản lý Key</h2>
+            <form id="addKeyForm" class="row g-3 mb-4 p-3 bg-dark bg-opacity-25 rounded-3">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="newKey" placeholder="Key mới" required>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="newLink" placeholder="Đường dẫn tải" required>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="newNote" placeholder="Ghi chú (tuỳ chọn)">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-success w-100">Thêm Key mới</button>
+                </div>
+                <div id="addKeyMessage" class="mt-2 text-center w-100"></div>
+            </form>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Key</th>
+                            <th>Trạng thái</th>
+                            <th>Tên khách</th>
+                            <th>Thời gian sử dụng</th>
+                            <th>Link tải</th>
+                            <th>Ghi chú</th>
+                        </tr>
+                    </thead>
+                    <tbody id="keyTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div class="modal fade" id="adminLoginModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header border-0">
+            <h5 class="modal-title">Đăng nhập Admin</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Tài khoản</label>
+                    <input type="text" class="form-control" id="username" required value="admin">
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Mật khẩu</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mt-2">Đăng nhập</button>
+                <div id="loginMessage" class="mt-3 text-center"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const adminLoginModal = new bootstrap.Modal(document.getElementById('adminLoginModal'));
+        const adminLoginBtn = document.getElementById('adminLoginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        adminLoginBtn.addEventListener('click', () => {
+            document.getElementById('loginMessage').textContent = '';
+            adminLoginModal.show();
+        });
+
+        document.getElementById('keyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const customerName = document.getElementById('customerName').value.trim();
+            const productKey = document.getElementById('productKey').value.trim();
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = '';
+            const res = await fetch('/key/use', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customerName, key: productKey })
+            });
+            const data = await res.json();
+            if (data.success) {
+                messageDiv.textContent = 'Key hợp lệ! Đang chuyển hướng...';
+                messageDiv.className = 'mt-3 text-center text-success';
+                window.location.href = data.link;
+            } else {
+                messageDiv.textContent = data.message;
+                messageDiv.className = 'mt-3 text-center text-danger';
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const msg = document.getElementById('loginMessage');
+            msg.textContent = '';
+            const res = await fetch('/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (data.success) {
+                adminLoginModal.hide();
+                showAdminPanel();
+            } else {
+                msg.textContent = data.message;
+                msg.className = 'mt-3 text-center text-danger';
+            }
+        });
+
+        function showAdminPanel() {
+            document.getElementById('customer-view').classList.add('d-none');
+            document.getElementById('adminPanel').classList.remove('d-none');
+            adminLoginBtn.classList.add('d-none');
+            logoutBtn.classList.remove('d-none');
+            loadKeys();
+        }
+
+        logoutBtn.onclick = async function() {
+            await fetch('/admin/logout', { method: 'POST', credentials: 'include' });
+            location.reload();
+        };
+
+        document.getElementById('addKeyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const key = document.getElementById('newKey').value.trim();
+            const link = document.getElementById('newLink').value.trim();
+            const note = document.getElementById('newNote').value.trim();
+            const msg = document.getElementById('addKeyMessage');
+            msg.textContent = '';
+            const res = await fetch('/admin/add-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key, link, note }),
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (data.success) {
+                msg.textContent = 'Thêm key thành công!';
+                msg.className = 'mt-2 text-center text-success';
+                document.getElementById('addKeyForm').reset();
+                loadKeys();
+            } else {
+                msg.textContent = data.message;
+                msg.className = 'mt-2 text-center text-danger';
+            }
+        });
+
+        async function loadKeys() {
+            const res = await fetch('/admin/list', { credentials: 'include' });
+            if (res.status !== 200) {
+                alert('Phiên đăng nhập hết hạn!');
+                location.reload();
+                return;
+            }
+            const keys = await res.json();
+            const tbody = document.getElementById('keyTableBody');
+            tbody.innerHTML = '';
+            keys.forEach(k => {
+                tbody.innerHTML += `<tr>
+                    <td><b>${k.key}</b></td>
+                    <td>${k.used ? `<span class='text-danger'>Đã dùng</span>` : `<span class='text-success'>Chưa dùng</span>`}</td>
+                    <td>${k.customerName || '-'}</td>
+                    <td>${k.usedAt ? new Date(k.usedAt).toLocaleString('vi-VN') : '-'}</td>
+                    <td><a href="${k.link}" target="_blank" class="text-white">${k.link}</a></td>
+                    <td>${k.note || '-'}</td>
+                </tr>`;
+            });
+        }
+
+        async function checkLogin() {
+            const res = await fetch('/admin/check', { credentials: 'include' });
+            const data = await res.json();
+            if (data.loggedIn) showAdminPanel();
+        }
+        checkLogin();
+    </script>
+</body>
+</html> 

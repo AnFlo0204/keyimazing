@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin KeyImazing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #232526 0%, #414345 100%);
+            min-height: 100vh;
+        }
+        .glass {
+            background: rgba(255,255,255,0.10);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.18);
+            padding: 2.5rem 2rem;
+            max-width: 420px;
+            width: 100%;
+            margin: 4rem auto 0 auto;
+        }
+        .logo {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 2px 2px 8px #232526;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .admin-panel {
+            max-width: 900px;
+            margin: 2rem auto;
+            background: rgba(255,255,255,0.10);
+            border-radius: 20px;
+            padding: 2rem;
+        }
+        .table thead th {
+            background: #232526;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div id="loginBox" class="glass">
+        <div class="logo">Admin KeyImazing</div>
+        <form id="loginForm">
+            <div class="mb-3">
+                <label for="username" class="form-label">Tài khoản</label>
+                <input type="text" class="form-control" id="username" required value="admin">
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Mật khẩu</label>
+                <input type="password" class="form-control" id="password" required value="Khanghuynh000">
+            </div>
+            <button type="submit" class="btn btn-dark w-100">Đăng nhập</button>
+            <div id="loginMessage" class="mt-3 text-center"></div>
+        </form>
+    </div>
+    <div id="adminPanel" class="admin-panel d-none">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Quản lý Key</h2>
+            <button class="btn btn-danger" id="logoutBtn">Đăng xuất</button>
+        </div>
+        <form id="addKeyForm" class="row g-3 mb-4">
+            <div class="col-md-4">
+                <input type="text" class="form-control" id="newKey" placeholder="Key mới" required>
+            </div>
+            <div class="col-md-4">
+                <input type="text" class="form-control" id="newLink" placeholder="Đường dẫn tải" required>
+            </div>
+            <div class="col-md-4">
+                <input type="text" class="form-control" id="newNote" placeholder="Ghi chú (tuỳ chọn)">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-success w-100">Thêm Key</button>
+            </div>
+            <div id="addKeyMessage" class="mt-2 text-center"></div>
+        </form>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Trạng thái</th>
+                        <th>Tên khách</th>
+                        <th>Thời gian sử dụng</th>
+                        <th>Link tải</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody id="keyTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function checkLogin() {
+            const res = await fetch('/admin/check');
+            const data = await res.json();
+            if (data.loggedIn) showAdminPanel();
+        }
+        checkLogin();
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const msg = document.getElementById('loginMessage');
+            msg.textContent = '';
+            const res = await fetch('/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showAdminPanel();
+            } else {
+                msg.textContent = data.message;
+                msg.className = 'mt-3 text-center text-danger';
+            }
+        });
+
+        function showAdminPanel() {
+            document.getElementById('loginBox').classList.add('d-none');
+            document.getElementById('adminPanel').classList.remove('d-none');
+            loadKeys();
+        }
+
+        document.getElementById('logoutBtn').onclick = async function() {
+            await fetch('/admin/logout', { method: 'POST' });
+            location.reload();
+        };
+
+        document.getElementById('addKeyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const key = document.getElementById('newKey').value.trim();
+            const link = document.getElementById('newLink').value.trim();
+            const note = document.getElementById('newNote').value.trim();
+            const msg = document.getElementById('addKeyMessage');
+            msg.textContent = '';
+            const res = await fetch('/admin/add-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key, link, note })
+            });
+            const data = await res.json();
+            if (data.success) {
+                msg.textContent = 'Thêm key thành công!';
+                msg.className = 'mt-2 text-center text-success';
+                document.getElementById('addKeyForm').reset();
+                loadKeys();
+            } else {
+                msg.textContent = data.message;
+                msg.className = 'mt-2 text-center text-danger';
+            }
+        });
+
+        async function loadKeys() {
+            const res = await fetch('/admin/list');
+            const keys = await res.json();
+            const tbody = document.getElementById('keyTableBody');
+            tbody.innerHTML = '';
+            keys.forEach(k => {
+                tbody.innerHTML += `<tr>
+                    <td><b>${k.key}</b></td>
+                    <td>${k.used ? '<span class=\'text-danger\'>Đã dùng</span>' : '<span class=\'text-success\'>Chưa dùng</span>'}</td>
+                    <td>${k.customerName || '-'}</td>
+                    <td>${k.usedAt ? new Date(k.usedAt).toLocaleString('vi-VN') : '-'}</td>
+                    <td><a href="${k.link}" target="_blank">${k.link}</a></td>
+                    <td>${k.note || '-'}</td>
+                </tr>`;
+            });
+        }
+    </script>
+</body>
+</html> 
