@@ -199,7 +199,12 @@
             if (data.success) {
                 messageDiv.textContent = 'Key hợp lệ! Đang chuyển hướng...';
                 messageDiv.className = 'mt-3 text-center text-success';
-                window.location.href = data.link;
+                     // Xóa local/session storage và chuyển hướng không lưu history
+                localStorage.clear();
+                sessionStorage.clear();
+                setTimeout(() => {
+                    location.replace(data.link);
+                }, 1000);
             } else {
                 messageDiv.textContent = data.message;
                 messageDiv.className = 'mt-3 text-center text-danger';
